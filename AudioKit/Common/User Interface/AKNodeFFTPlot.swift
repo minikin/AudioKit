@@ -5,6 +5,7 @@
 //  Created by Aurelius Prochazka, revision history on Github.
 //  Copyright © 2018 AudioKit. All rights reserved.
 //
+import AudioKit
 
 /// Plot the FFT output from any node in an signal processing graph
 @IBDesignable
@@ -20,7 +21,7 @@ open class AKNodeFFTPlot: EZAudioPlot, EZAudioFFTDelegate {
                                  delegate: self)
             }
 
-            input?.avAudioNode.installTap(
+            input?.avAudioUnitOrNode.installTap(
                 onBus: 0,
                 bufferSize: bufferSize,
                 format: nil) { [weak self] (buffer, _) in
@@ -37,7 +38,6 @@ open class AKNodeFFTPlot: EZAudioPlot, EZAudioFFTDelegate {
         isConnected = true
     }
 
-
     // Useful to reconnect after connecting to Audiobus or IAA
     @objc func reconnect() {
         pause()
@@ -46,7 +46,7 @@ open class AKNodeFFTPlot: EZAudioPlot, EZAudioFFTDelegate {
 
     @objc open func pause() {
         if isConnected {
-            node?.avAudioNode.removeTap(onBus: 0)
+            node?.avAudioUnitOrNode.removeTap(onBus: 0)
             isConnected = false
         }
     }
@@ -66,7 +66,6 @@ open class AKNodeFFTPlot: EZAudioPlot, EZAudioFFTDelegate {
                                                object: nil)
     }
 
-
     internal var bufferSize: UInt32 = 1_024
 
     /// EZAudioFFT container
@@ -83,7 +82,7 @@ open class AKNodeFFTPlot: EZAudioPlot, EZAudioFFTDelegate {
     }
 
     deinit {
-        node?.avAudioNode.removeTap(onBus: 0)
+        node?.avAudioUnitOrNode.removeTap(onBus: 0)
     }
 
     /// Required coder-based initialization (for use with Interface Builder)

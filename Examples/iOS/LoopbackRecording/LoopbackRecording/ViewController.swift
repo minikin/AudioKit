@@ -61,10 +61,10 @@ class ViewController: UIViewController {
         }
 
         view.addSubview(button)
-        self.addChildViewController(comparisonViewController)
+        self.addChild(comparisonViewController)
         comparisonViewController.view.isHidden = true
         view.addSubview(comparisonViewController.view)
-        comparisonViewController.didMove(toParentViewController: self)
+        comparisonViewController.didMove(toParent: self)
 
     }
 
@@ -73,8 +73,7 @@ class ViewController: UIViewController {
         do {
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setActive(true)
-            try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord,
-                                         with: [.defaultToSpeaker, .mixWithOthers])
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .mixWithOthers])
 
             // Measurement mode can have an effect on latency.  But you end up having to boost everything.
             // It's a must if you want accurate recordings.  It turns of the os input processing.
@@ -150,7 +149,7 @@ class ViewController: UIViewController {
 
         // MeasurementMode is really quiet.  AKClipRecorder.recordClip takes an optional tap where you can
         // read and write to the data before it's written to file.  We'll use that to boost if in MeasurementMode.
-        let tap = audioSession.mode != AVAudioSessionModeMeasurement ? nil : { (buffer: AVAudioPCMBuffer, time: AVAudioTime) in
+        let tap = convertFromAVAudioSessionMode(audioSession.mode) != convertFromAVAudioSessionMode(AVAudioSession.Mode.measurement) ? nil : { (buffer: AVAudioPCMBuffer, time: AVAudioTime) in
             guard let channels = buffer.floatChannelData else { return }
             for c in 0..<Int(buffer.format.channelCount) {
                 for i in 0..<Int(buffer.frameLength) {
@@ -167,15 +166,15 @@ class ViewController: UIViewController {
 
             switch result {
             case .error(let error):
-                print(error)
+                AKLog(error)
                 return
             case .clip(let clip):
-                print("loopback.duration \(clip.duration)")
-                print("loopback.StartTime \(clip.startTime)")
+                AKLog("loopback.duration \(clip.duration)")
+                AKLog("loopback.StartTime \(clip.startTime)")
                 do {
                     let urlInDocs = FileManager.docs.appendingPathComponent("loopback").appendingPathExtension(clip.url.pathExtension)
                     try FileManager.default.moveItem(at: clip.url, to: urlInDocs)
-                    print("loopback saved at " + urlInDocs.path)
+                    AKLog("loopback saved at " + urlInDocs.path)
 
                     // Schedule 30 loops of the recorderd audio to play
                     let audioFile = try AKAudioFile(forReading: urlInDocs)
@@ -201,7 +200,7 @@ class ViewController: UIViewController {
                     })
 
                 } catch {
-                    print(error)
+                    AKLog(error)
                 }
             }
 
@@ -211,18 +210,18 @@ class ViewController: UIViewController {
         try? directRecorder?.recordClip(time: 0, duration: targetDuration, tap: nil) { result in
             switch result {
             case .error(let error):
-                print(error)
+                AKLog(error)
                 return
             case .clip(let clip):
-                print("direct.duration \(clip.duration)")
-                print("direct.StartTime \(clip.startTime)")
+                AKLog("direct.duration \(clip.duration)")
+                AKLog("direct.StartTime \(clip.startTime)")
                 do {
                     let urlInDocs = FileManager.docs.appendingPathComponent("direct").appendingPathExtension(clip.url.pathExtension)
                     referenceURL = urlInDocs
                     try FileManager.default.moveItem(at: clip.url, to: urlInDocs)
-                    print("Direct saved at " + urlInDocs.path)
+                    AKLog("Direct saved at " + urlInDocs.path)
                 } catch {
-                    print(error)
+                    AKLog(error)
                 }
             }
         }
@@ -278,7 +277,17 @@ extension FileManager {
                 try fileManager.removeItem(at: docs.appendingPathComponent(fileName))
             }
         } catch {
-            print(error)
+            AKLog(error)
         }
     }
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertFromAVAudioSessionCategory(_ input: AVAudioSession.Category) -> String {
+	return input.rawValue
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertFromAVAudioSessionMode(_ input: AVAudioSession.Mode) -> String {
+	return input.rawValue
 }

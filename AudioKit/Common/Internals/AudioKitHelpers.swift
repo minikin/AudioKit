@@ -27,11 +27,6 @@ extension Collection {
         let offset = Int(arc4random_uniform(UInt32(Int64(count))))
         return index(startIndex, offsetBy: offset)
     }
-
-    /// Retrieve a random element from the collection
-    public func randomElement() -> Iterator.Element {
-        return self[randomIndex]
-    }
 }
 
 /// Helper function to convert codes for Audio Units
@@ -267,7 +262,7 @@ extension ClosedRange {
     /// - parameter value: Value to clamp
     ///
     public func clamp(_ value: Bound) -> Bound {
-        return min(max(value, lowerBound), upperBound)
+        return Swift.min(Swift.max(value, lowerBound), upperBound)
     }
 }
 
@@ -333,6 +328,12 @@ public extension AVAudioUnit {
     }
 }
 
+extension AVAudioNode {
+    func inputConnections() -> [AVAudioConnectionPoint] {
+        return (0..<numberOfInputs).compactMap { engine?.inputConnectionPoint(for: self, inputBus: $0) }
+    }
+}
+
 extension AUParameter {
     @nonobjc
     convenience init(_ identifier: String,
@@ -381,7 +382,7 @@ extension Dictionary: Occupiable { }
 extension Set: Occupiable { }
 
 #if !os(macOS)
-extension AVAudioSessionCategoryOptions: Occupiable { }
+extension AVAudioSession.CategoryOptions: Occupiable { }
 #endif
 
 prefix operator ❗️

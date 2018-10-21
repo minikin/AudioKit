@@ -624,12 +624,4 @@ open class AKMusicTrack {
         }
     }
 
-    /// Debug by showing the track pointer.
-    open func debug() {
-        CAShow(trackPointer)
-    }
-
-    open func debugInitTrack() {
-        CAShow(initTrackPointer)
-    }
 }
